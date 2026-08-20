@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SYNODIC GCS</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        #serial::placeholder {
+            color: yellow;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: black;
+            color: white;
+            padding: 15px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            justify-content: space-between;
+        }
+
+        .header img {
+            height: 80px;
+        }
+
+        .header h1 {
+            flex: 1;
+            text-align: center;
+            color: lime;
+        }
+
+        .serial-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        select {
+            background: black;
+            color: yellow;
+            border: 2px solid green;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        button {
+            background: green;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #status {
+            color: yellow;
+            font-weight: bold;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border: 2px solid green;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            color: lime;
+        }
+
+        .value {
+            color: yellow;
+            font-size: 22px;
+            margin-top: 10px;
+        }
+
+        .graphs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .graph-card {
+            border: 2px solid green;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .graph-card h3 {
+            text-align: center;
+            color: lime;
+            margin-bottom: 10px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        canvas {
+            height: 250px !important;
+        }
+
+        @media(max-width:900px) {
+
+            .graphs {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body style="text-decoration: none;">
+
+    <div class="header">
+        <img src="/logo2.png" alt="Logo">
+
+        <div style="margin-top: 30px;" class="serial-box">
+
+            <!-- <label>COM Port</label>
+
+            <select id="port">
+                <option>Loading...</option>
+            </select>
+
+            <label>Baud Rate</label>
+
+            <select id="baud">
+                <option>9600</option>
+                <option>57600</option>
+                <option selected>115200</option>
+                <option>230400</option>
+            </select> -->
+
+            <button onclick="connectPort()">
+                Connect
+            </button>
+             <!-- <button onclick="disconnectPort()">
+                Disconnect
+            </button> -->
+
+            <span id="status">Disconnected</span> 
+
+        </div>
+    </div>
+
+    <h1 style="text-align: center; color: lime; margin-bottom: 10px;">SYNODIC GCS</h1>
+
+
+    <!-- Telemetry Cards -->
+
+    <div class="cards">
+
+        <div class="card">
+            Mission Time
+            <div class="value" id="missionTime">---</div>
+        </div>
+
+        <div class="card">
+            Packet Count
+            <div class="value" id="packetCount">---</div>
+        </div>
+
+        <div class="card">
+            Altitude
+            <div class="value" id="altitude">---</div>
+        </div>
+
+        <div class="card">
+            Pressure
+            <div class="value" id="pressure">---</div>
+        </div>
+
+        <div class="card">
+            Current
+            <div class="value" id="current">---</div>
+        </div>
+
+        <div class="card">
+            Voltage
+            <div class="value" id="voltage">---</div>
+        </div>
+
+        <div class="card">
+            Latitude
+            <div class="value" id="latitude">---</div>
+        </div>
+
+        <div class="card">
+            Longitude
+            <div class="value" id="longitude">---</div>
+        </div>
+
+        <div class="card">
+            Acc X
+            <div class="value" id="accX">---</div>
+        </div>
+
+        <div class="card">
+            Acc Y
+            <div class="value" id="accY">---</div>
+        </div>
+
+        <div class="card">
+            Acc Z
+            <div class="value" id="accZ">---</div>
+        </div>
+        <div class="card">
+            Mag X
+            <div class="value" id="magX">---</div>
+        </div>
+
+        <div class="card">
+            Mag Y
+            <div class="value" id="magY">---</div>
+        </div>
+
+        <div class="card">
+            Mag Z
+            <div class="value" id="magZ">---</div>
+        </div>
+        <div class="card">
+            Gyro X
+            <div class="value" id="gyroX">---</div>
+        </div>
+
+        <div class="card">
+            Gyro Y
+            <div class="value" id="gyroY">---</div>
+        </div>
+
+        <div class="card">
+            Gyro Z
+            <div class="value" id="gyroZ">---</div>
+        </div>
+        <div class="card">
+            Euler X
+            <div class="value" id="eulerX">---</div>
+        </div>
+
+        <div class="card">
+            Euler Y
+            <div class="value" id="eulerY">---</div>
+        </div>
+
+        <div class="card">
+            Euler Z
+            <div class="value" id="eulerZ">---</div>
+        </div>
+        <div class="card">
+            State
+            <div class="value" id="State">---</div>
+        </div>
+
+    </div>
+
+    <!-- Graphs -->
+
+    <div class="graphs">
+
+        <div class="graph-card">
+            <h3>Altitude</h3>
+            <canvas id="altChart"></canvas>
+        </div>
+
+        <div class="graph-card">
+            <h3>Pressure</h3>
+            <canvas id="presChart"></canvas>
+        </div>
+
+        <div class="graph-card">
+            <h3>Current</h3>
+            <canvas id="currChart"></canvas>
+        </div>
+
+        <div class="graph-card">
+            <h3>Voltage</h3>
+            <canvas id="voltChart"></canvas>
+        </div>
+
+        <div class="graph-card ">
+            <h3>Acceleration (X Y Z)</h3>
+            <canvas id="accChart"></canvas>
+        </div>
+
+    </div>
+
+    <textarea placeholder="SerialMonitor" spellcheck="false"
+        style="height: 200px; width: 100vw; border: 2px solid green; margin-top: 10px; border-radius: 10px; background-color: black; color: yellow; text-decoration: none; outline: none; padding-left: 5px;  padding-top: 10px;"
+        name="serial" id="serial"></textarea>
+
+
+    <!-- <textarea placeholder="SerialMonitor" spellcheck="false"
+        style="height: 200px; width: 100vw; border: 2px solid green; margin-top: 10px; border-radius: 10px; background-color: black; color: yellow; text-decoration: none; outline: none; padding-left: 5px;  padding-top: 10px;"
+        name="output" id="output"></textarea> -->
+
+    <script src="data.js"></script>
+
+</body>
+
+</html>

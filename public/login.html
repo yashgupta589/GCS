@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCS Login</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#000000);
+}
+
+.login-container{
+    width:380px;
+    padding:40px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(15px);
+    box-shadow:0 8px 32px rgba(168, 158, 158, 0.3);
+    text-align:center;
+    color:white;
+    border: 2px solid green;
+}
+
+.logo img{
+    /* font-size:55px;
+    margin-bottom:10px; */
+    width: 150px;
+    
+}
+
+h1{
+    margin-bottom:8px;
+    color: green;
+}
+
+.subtitle{
+    color:green;
+    margin-bottom:30px;
+}
+
+.input-group{
+    margin-bottom:18px;
+    background-color: rgb(16, 16, 16);
+}
+
+input{
+    width:100%;
+    padding:14px;
+    border:none;
+    outline:none;
+    border-radius:10px;
+    background:rgba(255,255,255,0.12);
+    color:yellow;
+    font-size:15px;
+}
+
+input::placeholder{
+    color:yellow;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:#3b82f6;
+    color:white;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button{
+    background:green;
+    transform:translateY(-2px);
+}
+
+#error{
+    color:#f87171;
+    margin-top:15px;
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="logo"><img src="./logo2.png" alt=""></div>
+
+    <h1>Ground Control Station</h1>
+
+    <p class="subtitle">Flight Telemetry Monitoring System</p>
+
+    <div class="input-group">
+        <input type="text" id="username" placeholder="Username">
+    </div>
+
+    <div class="input-group">
+        <input type="password" id="password" placeholder="Password">
+    </div>
+
+    <button onclick="login()">
+        Login
+    </button>
+
+    <p id="error">
+        Invalid Username or Password
+    </p>
+
+</div>
+
+<script>
+async function login() {
+
+    const username =
+        document.getElementById("username").value;
+
+    const password =
+        document.getElementById("password").value;
+
+    const response = await fetch("/login", {
+        method: "POST",
+        headers: {
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            username,
+            password
+        })
+    });
+
+    if(response.ok) {
+        window.location.href = "/dashboard";
+    }
+    else {
+        alert("Invalid Credentials");
+    }
+}
+</script>
+
+</body>
+</html>
+
