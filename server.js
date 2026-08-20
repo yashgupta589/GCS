@@ -8,6 +8,13 @@ const PORT = process.env.PORT || 3000;
 
 
 // ============================================================
+// RENDER PROXY
+// ============================================================
+
+app.set("trust proxy", 1);
+
+
+// ============================================================
 // MIDDLEWARE
 // ============================================================
 
@@ -15,11 +22,15 @@ app.use(express.json());
 
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || "gcs_secret_key",
+        secret: process.env.SESSION_SECRET || "gcs_secret_key_987654",
         resave: false,
         saveUninitialized: false,
+
         cookie: {
-            secure: process.env.NODE_ENV === "production"
+            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000
         }
     })
 );
@@ -43,7 +54,20 @@ app.use(
 // LOGIN PAGE
 // ============================================================
 
+app.get("/health", (req, res) => {
+    res.json({
+        status: "OK",
+        server: "GCS Server"
+    });
+});
+
 app.get("/", (req, res) => {
+
+    if (req.session.loggedIn) {
+
+        return res.redirect("/dashboard");
+
+    }
 
     res.sendFile(
         path.join(
@@ -52,7 +76,6 @@ app.get("/", (req, res) => {
             "login.html"
         )
     );
-
 });
 
 
@@ -68,7 +91,9 @@ app.post("/login", (req, res) => {
     } = req.body;
 
 
-    // Temporary login
+    console.log("Login attempt:", username);
+
+
     if (
         username === "admin" &&
         password === "1234"
@@ -76,11 +101,40 @@ app.post("/login", (req, res) => {
 
         req.session.loggedIn = true;
 
-        return res.json({
-            success: true
+
+        // Make sure session is saved before response
+        req.session.save((err) => {
+
+            if (err) {
+
+                console.error(
+                    "Session save error:",
+                    err
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Session error"
+                });
+            }
+
+
+            console.log(
+                "Login successful - session saved"
+            );
+
+
+            res.json({
+                success: true
+            });
+
         });
 
+        return;
     }
+
+
+    console.log("Invalid login");
 
 
     res.status(401).json({
@@ -97,11 +151,26 @@ app.post("/login", (req, res) => {
 
 app.get("/dashboard", (req, res) => {
 
+    console.log(
+        "Dashboard session:",
+        req.session.loggedIn
+    );
+
+
     if (!req.session.loggedIn) {
+
+        console.log(
+            "Not logged in -> redirecting to login"
+        );
 
         return res.redirect("/");
 
     }
+
+
+    console.log(
+        "Dashboard access granted"
+    );
 
 
     res.sendFile(
@@ -121,7 +190,7 @@ app.get("/dashboard", (req, res) => {
 
 app.post("/logout", (req, res) => {
 
-    req.session.destroy(err => {
+    req.session.destroy((err) => {
 
         if (err) {
 
@@ -132,111 +201,13 @@ app.post("/logout", (req, res) => {
         }
 
 
-        res.json({
-            success: true
-        });
-
-    });
-
-});
-
-
-// ============================================================
-// SERIAL STATUS
-// ============================================================
-
-// IMPORTANT:
-// SerialPort is NOT used on Render.
-// Browser handles ESP32 connection using Web Serial API.
-
-app.get("/serial-status", (req, res) => {
-
-    res.json({
-        success: true,
-        message: "Serial connection is handled by browser"
-    });
-
-});
-
-
-// ============================================================
-// TELEMETRY API
-// ============================================================
-
-// Your latest data.js receives ESP32 data directly
-// through navigator.serial.
-//
-// Therefore this API does not read COM port on Render.
-
-let latestPacket = "";
-
-
-// Optional API to store latest packet
-app.post("/api/data", (req, res) => {
-
-    try {
-
-        const {
-            packet
-        } = req.body;
-
-
-        if (typeof packet !== "string") {
-
-            return res.status(400).json({
-                success: false,
-                message: "Invalid packet"
-            });
-
-        }
-
-
-        latestPacket = packet;
+        res.clearCookie("connect.sid");
 
 
         res.json({
             success: true
         });
 
-    }
-    catch (err) {
-
-        console.error(err);
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
-    }
-
-});
-
-
-// ============================================================
-// GET LATEST DATA
-// ============================================================
-
-app.get("/api/data", (req, res) => {
-
-    if (!latestPacket) {
-
-        return res.json({
-            values: []
-        });
-
-    }
-
-
-    const values = latestPacket
-        .replace("(", "")
-        .replace(")", "")
-        .split(",")
-        .map(value => value.trim());
-
-
-    res.json({
-        values: values
     });
 
 });
